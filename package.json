@@ -1,6 +1,4 @@
 {
   "type": "module",
-  "dependencies": {
-    "discord-interactions": "^4.0.0"
-  }
+  "dependencies": { "discord-interactions": "^4.0.0" }
 }

@@ -4,24 +4,19 @@ export default async (req, res) => {
     const { sid, content } = req.body || {};
     if (!sid || !content) return res.status(400).json({ ok:false, error:'sid/content required' });
 
-    // 1) Mark as pending in Redis
     await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/set/${sid}/pending`, {
       headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` }
     });
 
-    // Optional: ping a specific user to trigger a sound
     const pingId = process.env.PING_USER_ID;
-    const contentStr = pingId ? `<@${pingId}> ${content}` : content;
-
-    // 2) Post a button message to Discord channel
     const body = {
-      content: contentStr,
+      content: pingId ? `<@${pingId}> ${content}` : content,
       allowed_mentions: pingId ? { users: [pingId] } : undefined,
       components: [{
-        type: 1, // action row
+        type: 1,
         components: [
-          { type: 2, style: 3, label: "Doğrula",     custom_id: `approve:${sid}` }, // green
-          { type: 2, style: 4, label: "Hata Göster", custom_id: `reject:${sid}`  }  // red
+          { type: 2, style: 3, label: "Doğrula",     custom_id: `approve:${sid}` },
+          { type: 2, style: 4, label: "Hata Göster", custom_id: `reject:${sid}`  }
         ]
       }]
     };
@@ -35,13 +30,9 @@ export default async (req, res) => {
       body: JSON.stringify(body)
     });
 
-    if (!resp.ok) {
-      const t = await resp.text().catch(()=>'');
-      return res.status(500).json({ ok:false, error:'discord_post_failed', detail:t });
-    }
-
+    if (!resp.ok) return res.status(500).json({ ok:false, error:'discord_post_failed' });
     res.json({ ok:true });
-  } catch (e) {
+  } catch {
     res.status(500).json({ ok:false, error:'server_error' });
   }
 };

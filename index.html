@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Discord Bridge • Test Panel</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0b0d12;color:#e8ecf1;margin:0;padding:32px}
+  .card{background:#111523;border:1px solid #1a1f33;border-radius:14px;padding:20px;max-width:760px;margin:auto;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  h1{margin:0 0 6px;font-size:22px}
+  p{opacity:.85}
+  label{display:block;margin-top:12px;margin-bottom:6px;font-weight:600}
+  input,button{font:inherit}
+  input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #2a3352;background:#0f1320;color:#e8ecf1}
+  button{margin-top:12px;padding:10px 14px;border-radius:10px;border:0;background:#3b82f6;color:#fff;font-weight:700;cursor:pointer}
+  button:disabled{opacity:.6;cursor:not-allowed}
+  code{background:#0f1320;border:1px solid #2a3352;border-radius:8px;padding:2px 6px}
+  .row{display:flex;gap:10px;align-items:center}
+  .row>*{flex:1}
+  .muted{opacity:.7}
+  .ok{color:#10b981}
+  .err{color:#ef4444}
+  .small{font-size:12px;opacity:.8}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Discord Bridge • Test</h1>
+    <p class="muted">API'ler: <code>/api/submit</code>, <code>/api/status</code>, <code>/api/interactions</code>.</p>
+
+    <label>SID (oturum anahtarı)</label>
+    <input id="sid" placeholder="örn: test-1" value="test-1"/>
+
+    <label>Mesaj içeriği</label>
+    <input id="content" placeholder="Form geldi: deneme" value="Form geldi: deneme"/>
+
+    <div class="row">
+      <button id="send">Discord'a Gönder</button>
+      <button id="check">Durumu Kontrol Et</button>
+    </div>
+
+    <p id="out" class="small"></p>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const out = $("#out");
+
+async function post(url, data){
+  const r = await fetch(url, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  });
+  const text = await r.text();
+  return { ok:r.ok, text };
+}
+
+$("#send").onclick = async ()=>{
+  $("#send").disabled = true;
+  out.textContent = "Gönderiliyor...";
+  try{
+    const sid = $("#sid").value.trim() || "test-1";
+    const content = $("#content").value.trim() || "Form geldi: deneme";
+    const r = await post("/api/submit", { sid, content });
+    out.innerHTML = r.ok ? "<span class='ok'>OK</span> • Discord'a gönderildi." : "<span class='err'>HATA</span> • " + r.text;
+  }catch(e){ out.innerHTML = "<span class='err'>HATA</span>"; }
+  $("#send").disabled = false;
+};
+
+$("#check").onclick = async ()=>{
+  $("#check").disabled = true;
+  out.textContent = "Sorgulanıyor...";
+  try{
+    const sid = $("#sid").value.trim() || "test-1";
+    const r = await fetch("/api/status?sid="+encodeURIComponent(sid), { cache:"no-store" });
+    const j = await r.json();
+    out.innerHTML = "Durum: <b>"+(j.status||'?')+"</b>";
+  }catch(e){ out.innerHTML = "<span class='err'>HATA</span>"; }
+  $("#check").disabled = false;
+};
+</script>
+</body>
+</html>

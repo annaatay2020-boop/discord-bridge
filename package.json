@@ -1,0 +1,12 @@
+{
+  "name": "vercel-bridge-fresh",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "discord-interactions": "^4.0.0"
+  }
+}
